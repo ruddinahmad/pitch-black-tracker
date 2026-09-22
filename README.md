@@ -25,3 +25,11 @@ This is a static website designed for GitHub Pages. In the repository settings, 
 ## Card artwork
 
 Card artwork is loaded from Pokémon's official card-image CDN and is not included in this repository. This is an unofficial personal collection tracker. Pokémon and related names and artwork belong to their respective owners.
+
+## Disclaimer
+
+This is an unofficial, non-commercial, fan-made collection tracker.
+
+It is not affiliated with or endorsed by Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.
+
+Pokémon, Pokémon character names, card artwork, and related trademarks belong to their respective owners.
