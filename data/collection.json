@@ -1,6 +1,16 @@
 {
   "version": 1,
   "collection": "pitch-black-me05",
-  "updatedAt": null,
-  "counts": {}
+  "updatedAt": "2026-09-22T17:39:56.063Z",
+  "counts": {
+    "001-regular": 1,
+    "002-regular": 1,
+    "008-regular": 1,
+    "106-regular": 1,
+    "104-regular": 1,
+    "110-regular": 1,
+    "085-regular": 1,
+    "089-regular": 1,
+    "093-regular": 1
+  }
 }
