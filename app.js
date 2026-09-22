@@ -1,30 +1,18 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "pitch-black-tracker.v1";
   const IMAGE_BASE = "https://dz3we2x72f7ol.cloudfront.net/expansions/pitch-black/en-us/KD5B_EN_";
   const SECTION_LABELS = { base: "Base cards", reverse: "Reverse holos", secret: "Secret rares" };
+  const IS_EDITOR = document.body.dataset.mode === "editor";
   const filter = { section: "all", status: "all", query: "" };
   let cards = [];
   let slots = [];
-  let counts = loadCounts();
+  let counts = {};
   let editing = false;
+  let updatedAt = null;
+  let dirty = false;
 
   const $ = (selector) => document.querySelector(selector);
-  const grid = $("#card-grid");
-
-  function loadCounts() {
-    try {
-      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      return value && typeof value === "object" ? value : {};
-    } catch {
-      return {};
-    }
-  }
-
-  function saveCounts() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
-  }
 
   function imageUrl(number) {
     return `${IMAGE_BASE}${Number(number)}.png`;
@@ -61,11 +49,19 @@
   }
 
   function setQuantity(key, value) {
+    if (!IS_EDITOR || !editing) return;
     const next = Math.max(0, Math.min(99, Number(value) || 0));
     if (next === 0) delete counts[key];
     else counts[key] = next;
-    saveCounts();
+    dirty = true;
+    updateDownloadState();
     render();
+  }
+
+  function updateDownloadState() {
+    const button = $("#download-button");
+    if (!button) return;
+    button.textContent = dirty ? "Download collection.json" : "Download collection.json";
   }
 
   function makeFilterGroup(target, options, field) {
@@ -98,13 +94,12 @@
     const owned = quantity(slot.key) > 0;
     const article = document.createElement("article");
     article.className = `card ${owned ? "owned" : ""} ${slot.section === "reverse" ? "reverse" : ""}`;
-    article.dataset.key = slot.key;
 
     const imageWrap = document.createElement("div");
     imageWrap.className = "card__image-wrap";
     imageWrap.tabIndex = editing ? 0 : -1;
     imageWrap.setAttribute("role", editing ? "button" : "presentation");
-    if (editing) imageWrap.setAttribute("aria-label", `Add one ${slot.name} ${slot.number}${slot.variant ? `, ${slot.variant}` : ""}`);
+    if (editing) imageWrap.setAttribute("aria-label", `Add one ${slot.name} ${slot.number}`);
 
     const image = document.createElement("img");
     image.className = "card__image";
@@ -209,8 +204,10 @@
 
   function render() {
     document.body.classList.toggle("editing", editing);
-    $("#edit-dock").hidden = !editing;
-    $("#edit-button").hidden = editing;
+    const editDock = $("#edit-dock");
+    const editButton = $("#edit-button");
+    if (editDock) editDock.hidden = !editing;
+    if (editButton) editButton.hidden = editing;
 
     const stats = statistics();
     renderProgress(stats);
@@ -228,7 +225,7 @@
       heading.append(title, meta);
       nodes.push(heading, ...sectionSlots.map(cardElement));
     });
-    grid.replaceChildren(...nodes);
+    $("#card-grid").replaceChildren(...nodes);
 
     $("#empty-state").hidden = visible.length > 0;
     $("#result-count").textContent = `${visible.length} ${visible.length === 1 ? "slot" : "slots"}`;
@@ -252,46 +249,67 @@
     element.textContent = message;
     element.hidden = false;
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => { element.hidden = true; }, 3500);
+    toast.timer = setTimeout(() => { element.hidden = true; }, 3800);
   }
 
-  function exportBackup() {
-    const data = JSON.stringify({ version: 1, collection: "pitch-black-me05", counts }, null, 2);
+  function downloadCollection() {
+    const data = JSON.stringify({
+      version: 1,
+      collection: "pitch-black-me05",
+      updatedAt: new Date().toISOString(),
+      counts
+    }, null, 2);
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `pitch-black-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = "collection.json";
     link.click();
     URL.revokeObjectURL(url);
-    toast("Backup downloaded.");
+    dirty = false;
+    toast("collection.json downloaded. Upload it to the GitHub data folder.");
   }
 
-  function restoreBackup(file) {
+  function loadCollectionFile(file) {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       try {
         const data = JSON.parse(reader.result);
-        if (!data || data.collection !== "pitch-black-me05" || typeof data.counts !== "object") throw new Error("Invalid backup");
+        if (!data || data.collection !== "pitch-black-me05" || typeof data.counts !== "object") throw new Error("Invalid collection");
         counts = data.counts;
-        saveCounts();
+        updatedAt = data.updatedAt || null;
+        dirty = false;
         render();
-        toast("Collection restored.");
+        toast("Collection file loaded.");
       } catch {
-        toast("This is not a valid Pitch Black backup.");
+        toast("This is not a valid Pitch Black collection.json file.");
       }
     });
     reader.readAsText(file);
   }
 
+  async function loadData() {
+    const [cardsResponse, collectionResponse] = await Promise.all([
+      fetch("data/cards.json"),
+      fetch("data/collection.json", { cache: "no-store" })
+    ]);
+    if (!cardsResponse.ok) throw new Error("Unable to load card data");
+    cards = await cardsResponse.json();
+    slots = buildSlots();
+    if (collectionResponse.ok) {
+      const collection = await collectionResponse.json();
+      if (collection && collection.collection === "pitch-black-me05" && typeof collection.counts === "object") {
+        counts = collection.counts;
+        updatedAt = collection.updatedAt || null;
+      }
+    }
+  }
+
   async function start() {
     try {
-      const response = await fetch("data/cards.json");
-      if (!response.ok) throw new Error("Unable to load card data");
-      cards = await response.json();
-      slots = buildSlots();
+      await loadData();
     } catch (error) {
-      grid.innerHTML = `<p class="empty-state">The card list could not be loaded. Please refresh the page.</p>`;
+      $("#card-grid").innerHTML = `<p class="empty-state">The collection could not be loaded. Please refresh the page.</p>`;
       console.error(error);
       return;
     }
@@ -301,28 +319,38 @@
 
     makeFilterGroup("#section-filters", [["all", "All"], ["base", "Base"], ["reverse", "Reverse"], ["secret", "Secret"]], "section");
     makeFilterGroup("#status-filters", [["all", "Any"], ["owned", "Owned"], ["missing", "Missing"]], "status");
-
     $("#search-input").addEventListener("input", (event) => {
       filter.query = event.target.value.trim().toLowerCase();
       render();
     });
-    $("#edit-button").addEventListener("click", () => { editing = true; render(); });
-    $("#done-button").addEventListener("click", () => { editing = false; render(); window.scrollTo({ top: $("#toolbar").offsetTop, behavior: "smooth" }); });
     $("#clear-filters").addEventListener("click", clearFilters);
     $("#empty-clear").addEventListener("click", clearFilters);
-    $("#mark-visible").addEventListener("click", () => {
-      slots.filter(matches).forEach((slot) => { if (quantity(slot.key) === 0) counts[slot.key] = 1; });
-      saveCounts();
-      render();
-      toast("All shown cards marked as owned.");
-    });
-    $("#export-button").addEventListener("click", exportBackup);
-    $("#import-button").addEventListener("click", () => $("#import-file").click());
-    $("#import-file").addEventListener("change", (event) => {
-      const [file] = event.target.files;
-      if (file) restoreBackup(file);
-      event.target.value = "";
-    });
+
+    const syncStatus = $("#sync-status");
+    if (syncStatus) {
+      const time = updatedAt ? new Date(updatedAt).toLocaleString() : "not yet";
+      syncStatus.textContent = IS_EDITOR
+        ? `Editor draft · Published file updated ${time}`
+        : `Public view · Updated ${time}`;
+    }
+
+    if (IS_EDITOR) {
+      $("#edit-button").addEventListener("click", () => { editing = true; render(); });
+      $("#done-button").addEventListener("click", () => { editing = false; render(); window.scrollTo({ top: $("#toolbar").offsetTop, behavior: "smooth" }); });
+      $("#mark-visible").addEventListener("click", () => {
+        slots.filter(matches).forEach((slot) => { if (quantity(slot.key) === 0) counts[slot.key] = 1; });
+        dirty = true;
+        render();
+        toast("All shown cards marked as owned.");
+      });
+      $("#download-button").addEventListener("click", downloadCollection);
+      $("#load-button").addEventListener("click", () => $("#load-file").click());
+      $("#load-file").addEventListener("change", (event) => {
+        const [file] = event.target.files;
+        if (file) loadCollectionFile(file);
+        event.target.value = "";
+      });
+    }
     render();
   }
 

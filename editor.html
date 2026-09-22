@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#100c1f">
+  <title>Collection File Editor · Pitch Black</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="editor">
+  <a class="skip-link" href="#collection">Skip to collection</a>
+
+  <div class="owner-bar">
+    <div class="shell owner-bar__inner">
+      <span><strong>Collection file editor</strong> · No direct access to GitHub</span>
+      <a href="index.html">Return to public view</a>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="shell hero__layout">
+      <div>
+        <p class="eyebrow">Manual owner workflow · Mega Evolution · ME05</p>
+        <h1>Pitch<br><span>Black</span></h1>
+        <p class="intro">Edit quantities, download collection.json, then replace that file in the GitHub data folder.</p>
+        <div class="progress-list" id="progress-list" aria-label="Collection progress"></div>
+        <div class="summary" aria-live="polite">
+          <div><strong id="unique-count">0</strong><span>different cards</span></div>
+          <div><strong id="copy-count">0</strong><span>cards in total</span></div>
+        </div>
+      </div>
+      <div class="hero-card" aria-hidden="true">
+        <div class="hero-card__halo"></div>
+        <img id="hero-image" alt="" width="372" height="518" decoding="async">
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="shell toolbar__inner">
+      <div class="filter-group" role="group" aria-label="Filter by section" id="section-filters"></div>
+      <div class="filter-group" role="group" aria-label="Filter by ownership" id="status-filters"></div>
+      <label class="search">
+        <span class="sr-only">Search cards</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>
+        <input id="search-input" type="search" placeholder="Search name or number" autocomplete="off">
+      </label>
+      <button class="button button--primary" id="edit-button" type="button">Edit collection</button>
+    </div>
+  </div>
+
+  <main id="collection" class="shell collection" tabindex="-1">
+    <div class="results-bar">
+      <p id="result-count">194 slots</p>
+      <p class="sync-status" id="sync-status">Loading collection…</p>
+      <button class="text-button" id="clear-filters" type="button" hidden>Clear filters</button>
+    </div>
+    <div id="card-grid" class="card-grid" aria-live="polite"></div>
+    <div class="empty-state" id="empty-state" hidden>
+      <p>No cards match these filters.</p>
+      <button class="button" id="empty-clear" type="button">Clear filters</button>
+    </div>
+  </main>
+
+  <aside class="edit-dock" id="edit-dock" hidden aria-label="Collection file editing tools">
+    <div class="shell edit-dock__inner">
+      <div>
+        <strong>Edit mode</strong>
+        <span>Changes stay in this browser until you download collection.json.</span>
+      </div>
+      <div class="edit-dock__actions">
+        <button class="button" id="mark-visible" type="button">Mark shown owned</button>
+        <button class="button" id="load-button" type="button">Load JSON</button>
+        <button class="button" id="done-button" type="button">Done</button>
+        <button class="button button--primary" id="download-button" type="button">Download collection.json</button>
+        <input id="load-file" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </aside>
+
+  <footer>
+    <div class="shell footer__inner">
+      <p>This editor only creates a local JSON file. It cannot change GitHub or the public collection.</p>
+      <p>Unofficial, non-commercial fan-made collection tracker. Not affiliated with or endorsed by Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
