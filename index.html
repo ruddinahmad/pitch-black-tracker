@@ -8,7 +8,7 @@
   <title>Pitch Black · Collection Tracker</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-mode="public">
   <a class="skip-link" href="#collection">Skip to collection</a>
 
   <header class="hero">
@@ -43,13 +43,13 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>
         <input id="search-input" type="search" placeholder="Search name or number" autocomplete="off">
       </label>
-      <button class="button button--primary" id="edit-button" type="button">Edit collection</button>
     </div>
   </div>
 
   <main id="collection" class="shell collection" tabindex="-1">
     <div class="results-bar">
       <p id="result-count">194 slots</p>
+      <p class="sync-status" id="sync-status">Loading collection…</p>
       <button class="text-button" id="clear-filters" type="button" hidden>Clear filters</button>
     </div>
     <div id="card-grid" class="card-grid" aria-live="polite"></div>
@@ -59,30 +59,10 @@
     </div>
   </main>
 
-  <aside class="edit-dock" id="edit-dock" hidden aria-label="Collection editing tools">
-    <div class="shell edit-dock__inner">
-      <div>
-        <strong>Edit mode</strong>
-        <span>Tap a card or use + and − to change its quantity.</span>
-      </div>
-      <div class="edit-dock__actions">
-        <button class="button" id="mark-visible" type="button">Mark shown owned</button>
-        <button class="button" id="export-button" type="button">Backup</button>
-        <button class="button" id="import-button" type="button">Restore</button>
-        <button class="button button--primary" id="done-button" type="button">Done</button>
-        <input id="import-file" type="file" accept="application/json,.json" hidden>
-      </div>
-    </div>
-  </aside>
-
   <footer>
     <div class="shell footer__inner">
       <p>194 master-set slots: 84 base cards, 74 reverse holos and 36 secret rares. Promo cards are not included.</p>
-      <p>
-  Unofficial, non-commercial fan-made collection tracker. Not affiliated with
-  or endorsed by Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.
-  Pokémon and Pokémon character names are trademarks of their respective owners.
-</p>
+      <p>Unofficial, non-commercial fan-made collection tracker. Not affiliated with or endorsed by Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company. Pokémon and related trademarks belong to their respective owners.</p>
     </div>
   </footer>
 
